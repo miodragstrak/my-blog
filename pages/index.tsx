@@ -1,50 +1,30 @@
-import fs from 'fs';
-import path from 'path';
-import matter from 'gray-matter';
+import { getSortedPosts } from '../lib/posts';
 import Link from 'next/link';
-import { GetStaticProps } from 'next';
-
-type Post = {
-  slug: string;
-  title: string;
-};
+import type { Post } from '../types/Post';
 
 type Props = {
   posts: Post[];
 };
 
-export default function Home({ posts }: Props) {
+export default function HomePage({ posts }: Props) {
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">My Blog</h1>
+    <main className="max-w-2xl mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6">Latest Posts</h1>
       {posts.map((post) => (
         <div key={post.slug} className="mb-4">
-          <Link href={`/posts/${post.slug}`} className="text-xl text-blue-600 hover:underline">
-            {post.title}
-          </Link>
+          <h2 className="text-xl font-semibold">
+            <Link href={`/posts/${post.slug}`}>{post.title}</Link>
+          </h2>
+          <p className="text-sm text-gray-500">{post.date}</p>
         </div>
       ))}
-    </div>
+    </main>
   );
 }
 
-export const getStaticProps: GetStaticProps<Props> = async () => {
-  const files = fs.readdirSync(path.join('posts'));
-
-  const posts: Post[] = files.map((filename) => {
-    const slug = filename.replace('.md', '');
-    const markdownWithMeta = fs.readFileSync(path.join('posts', filename), 'utf-8');
-    const { data } = matter(markdownWithMeta);
-
-    return {
-      slug,
-      title: data.title ?? slug,
-    };
-  });
-
+export async function getStaticProps() {
+  const posts = getSortedPosts(3);
   return {
-    props: {
-      posts,
-    },
+    props: { posts },
   };
-};
+}
